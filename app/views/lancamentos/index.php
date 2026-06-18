@@ -16,6 +16,16 @@
             <?= $saldo < 0 ? ' <small style="font-size:0.7em">(negativo)</small>' : '' ?>
         </div>
     </div>
+    <div class="card">
+        <div class="card-label">IVA do mês</div>
+        <?php
+        $ivaTotal = (int)($totais['iva_receitas'] ?? 0) - (int)($totais['iva_despesas'] ?? 0);
+        ?>
+        <div class="card-value <?= $ivaTotal >= 0 ? 'vermelho' : 'verde' ?>">
+            € <?= formatMoney(abs($ivaTotal)) ?>
+            <small style="font-size:0.7em;display:block"><?= $ivaTotal >= 0 ? 'a pagar' : 'a recuperar' ?></small>
+        </div>
+    </div>
 </div>
 
 <!-- Filters -->
@@ -72,6 +82,7 @@
                 <th>Categoria</th>
                 <th>Tipo</th>
                 <th class="td-right">Valor</th>
+                <th class="td-right">IVA</th>
                 <th style="width:130px">Ações</th>
             </tr>
         </thead>
@@ -96,6 +107,13 @@
                 <td><span class="badge badge-<?= h($l['tipo']) ?>"><?= h($l['tipo']) ?></span></td>
                 <td class="td-right fw-bold <?= $l['tipo'] === 'receita' ? 'text-verde' : 'text-vermelho' ?>">
                     € <?= formatMoney($l['valor']) ?>
+                </td>
+                <td class="td-right">
+                    <?php if ((int)($l['valor_iva'] ?? 0) > 0): ?>
+                    <span class="text-light">€ <?= formatMoney((int)$l['valor_iva']) ?></span>
+                    <?php else: ?>
+                    <span class="text-light">—</span>
+                    <?php endif; ?>
                 </td>
                 <td class="td-actions">
                     <a href="/lancamentos/editar/<?= h($l['id']) ?>" class="btn btn-outline btn-sm">Editar</a>

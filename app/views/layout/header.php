@@ -33,6 +33,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="/iva" class="<?= ($activePage ?? '') === 'iva' ? 'active' : '' ?>">
+                        <span class="nav-icon">🧾</span> IVA
+                    </a>
+                </li>
+                <li>
                     <a href="/relatorios" class="<?= ($activePage ?? '') === 'relatorios' ? 'active' : '' ?>">
                         <span class="nav-icon">📈</span> Relatórios
                     </a>

@@ -40,6 +40,9 @@ $router->add('POST', '/categorias/excluir/{id}', 'CategoriasController', 'exclui
 // Relatórios
 $router->add('GET', '/relatorios', 'RelatoriosController', 'index');
 
+// IVA
+$router->add('GET', '/iva', 'IvaController', 'index');
+
 $method = $_SERVER['REQUEST_METHOD'];
 $uri    = $_SERVER['REQUEST_URI'];
 
