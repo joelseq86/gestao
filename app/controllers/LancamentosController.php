@@ -35,7 +35,9 @@ class LancamentosController
         $totais = Database::fetchOne(
             'SELECT
                 SUM(CASE WHEN tipo = \'receita\' THEN valor ELSE 0 END) AS receitas,
-                SUM(CASE WHEN tipo = \'despesa\' THEN valor ELSE 0 END) AS despesas
+                SUM(CASE WHEN tipo = \'despesa\' THEN valor ELSE 0 END) AS despesas,
+                SUM(CASE WHEN tipo = \'receita\' THEN valor_iva ELSE 0 END) AS iva_receitas,
+                SUM(CASE WHEN tipo = \'despesa\' THEN valor_iva ELSE 0 END) AS iva_despesas
              FROM lancamentos WHERE strftime(\'%Y-%m\', data) = ?',
             [$mes]
         );
@@ -54,6 +56,7 @@ class LancamentosController
         $lancamento = [
             'id' => null, 'tipo' => 'despesa', 'descricao' => '',
             'valor' => '', 'categoria_id' => '', 'data' => date('Y-m-d'), 'observacoes' => '',
+            'taxa_iva' => 0, 'valor_iva' => 0,
         ];
         $pageTitle = 'Novo Lançamento';
         $activePage = 'lancamentos';
@@ -73,8 +76,8 @@ class LancamentosController
         }
 
         Database::query(
-            'INSERT INTO lancamentos (tipo, descricao, valor, categoria_id, data, observacoes)
-             VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO lancamentos (tipo, descricao, valor, categoria_id, data, observacoes, taxa_iva, valor_iva)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             $data
         );
 
@@ -91,7 +94,9 @@ class LancamentosController
             redirect('/lancamentos');
         }
         // Convert cents to decimal for display in form
-        $lancamento['valor'] = number_format($lancamento['valor'] / 100, 2, ',', '.');
+        $lancamento['valor']     = number_format($lancamento['valor'] / 100, 2, ',', '.');
+        $lancamento['valor_iva'] = number_format(($lancamento['valor_iva'] ?? 0) / 100, 2, ',', '.');
+        $lancamento['taxa_iva']  = (int)($lancamento['taxa_iva'] ?? 0);
         $categorias = Database::fetchAll('SELECT * FROM categorias ORDER BY tipo, nome');
         $pageTitle = 'Editar Lançamento';
         $activePage = 'lancamentos';
@@ -112,7 +117,7 @@ class LancamentosController
 
         $data[] = $params['id'];
         Database::query(
-            'UPDATE lancamentos SET tipo=?, descricao=?, valor=?, categoria_id=?, data=?, observacoes=?
+            'UPDATE lancamentos SET tipo=?, descricao=?, valor=?, categoria_id=?, data=?, observacoes=?, taxa_iva=?, valor_iva=?
              WHERE id=?',
             $data
         );
@@ -132,12 +137,14 @@ class LancamentosController
 
     private function validate(): ?array
     {
-        $tipo      = $_POST['tipo']      ?? '';
-        $descricao = trim($_POST['descricao'] ?? '');
-        $valorStr  = trim($_POST['valor'] ?? '');
-        $catId     = $_POST['categoria_id'] ?? null;
-        $data      = trim($_POST['data'] ?? '');
-        $obs       = trim($_POST['observacoes'] ?? '');
+        $tipo        = $_POST['tipo']         ?? '';
+        $descricao   = trim($_POST['descricao']  ?? '');
+        $valorStr    = trim($_POST['valor']      ?? '');
+        $catId       = $_POST['categoria_id']    ?? null;
+        $data        = trim($_POST['data']       ?? '');
+        $obs         = trim($_POST['observacoes'] ?? '');
+        $taxaIva     = (int)($_POST['taxa_iva']  ?? 0);
+        $valorIvaStr = trim($_POST['valor_iva']  ?? '0');
 
         if (!in_array($tipo, ['receita', 'despesa']) || !$descricao || !$valorStr || !$data) {
             flashSet('danger', 'Preencha todos os campos obrigatórios.');
@@ -150,9 +157,14 @@ class LancamentosController
             return null;
         }
 
+        if (!in_array($taxaIva, [0, 6, 13, 23])) {
+            $taxaIva = 0;
+        }
+        $valorIva = parseMoney($valorIvaStr);
+
         $catId = $catId !== '' ? (int)$catId : null;
         $data  = parseDate($data);
 
-        return [$tipo, $descricao, $valor, $catId, $data, $obs ?: null];
+        return [$tipo, $descricao, $valor, $catId, $data, $obs ?: null, $taxaIva, $valorIva];
     }
 }

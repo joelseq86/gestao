@@ -40,6 +40,8 @@ try {
             categoria_id INTEGER REFERENCES categorias(id) ON DELETE SET NULL,
             data         TEXT    NOT NULL,
             observacoes  TEXT,
+            taxa_iva     INTEGER NOT NULL DEFAULT 0,
+            valor_iva    INTEGER NOT NULL DEFAULT 0,
             criado_em    TEXT    NOT NULL DEFAULT (datetime('now'))
         );
 

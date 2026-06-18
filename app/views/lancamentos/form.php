@@ -42,6 +42,34 @@
                        inputmode="decimal">
             </div>
 
+            <!-- Taxa IVA -->
+            <div class="form-group">
+                <label for="taxa_iva">Taxa IVA</label>
+                <select id="taxa_iva" name="taxa_iva">
+                    <option value="0"  <?= (int)($lancamento['taxa_iva'] ?? 0) === 0  ? 'selected' : '' ?>>0% — Isento</option>
+                    <option value="6"  <?= (int)($lancamento['taxa_iva'] ?? 0) === 6  ? 'selected' : '' ?>>6% — Reduzida</option>
+                    <option value="13" <?= (int)($lancamento['taxa_iva'] ?? 0) === 13 ? 'selected' : '' ?>>13% — Intermédia</option>
+                    <option value="23" <?= (int)($lancamento['taxa_iva'] ?? 0) === 23 ? 'selected' : '' ?>>23% — Normal</option>
+                </select>
+            </div>
+
+            <!-- Valor IVA -->
+            <div class="form-group">
+                <label for="valor_iva">Valor IVA (€)</label>
+                <input type="text" id="valor_iva" name="valor_iva"
+                       value="<?= h($lancamento['valor_iva'] ?? '0,00') ?>"
+                       placeholder="0,00"
+                       inputmode="decimal">
+            </div>
+
+            <!-- Total com IVA (read-only) -->
+            <div class="form-group">
+                <label>Total c/ IVA (€)</label>
+                <input type="text" id="total_com_iva" readonly
+                       placeholder="0,00"
+                       style="background:#f8f9fa;cursor:default;">
+            </div>
+
             <!-- Data -->
             <div class="form-group">
                 <label for="data">Data *</label>
@@ -80,6 +108,33 @@
                        placeholder="Notas adicionais (opcional)" maxlength="500">
             </div>
         </div>
+
+        <script>
+        (function () {
+            function ptToFloat(str) {
+                var s = str.replace(/[^\d,.]/g, '');
+                if (s.indexOf(',') !== -1) {
+                    s = s.replace(/\./g, '').replace(',', '.');
+                }
+                return parseFloat(s) || 0;
+            }
+            function floatToPt(num) {
+                return num.toFixed(2).replace('.', ',');
+            }
+            function recalc() {
+                var valor    = ptToFloat(document.getElementById('valor').value);
+                var taxa     = parseInt(document.getElementById('taxa_iva').value, 10) || 0;
+                var ivaVal   = Math.round(valor * taxa) / 100;
+                var total    = valor + ivaVal;
+                document.getElementById('valor_iva').value    = floatToPt(ivaVal);
+                document.getElementById('total_com_iva').value = floatToPt(total);
+            }
+            document.getElementById('valor').addEventListener('input', recalc);
+            document.getElementById('taxa_iva').addEventListener('change', recalc);
+            // Initialise on load
+            recalc();
+        })();
+        </script>
 
         <div class="form-actions">
             <button type="submit" class="btn btn-success">
